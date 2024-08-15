@@ -100,8 +100,20 @@ export const asyncRoutes = [
         path: 'user',
         component: () => import('@/views/user/user'),
         name: 'User',
-        meta: { title: '用户', icon: 'user', affix: true }
-      }
+        meta: { title: '用户' }
+      },
+      {
+        path: 'role',
+        component: () => import('@/views/user/role'),
+        name: 'Role',
+        meta: { title: '角色' }
+      },
+      {
+        path: 'permission',
+        component: () => import('@/views/user/permission'),
+        name: 'Permission',
+        meta: { title: '权限' }
+      },
     ]
   },
   {
@@ -109,17 +121,9 @@ export const asyncRoutes = [
     component: Layout,
     redirect: '/statistics/index',
     meta: {
-      title: '用户管理',
+      title: '数据统计',
       icon: 'user'
     },
-    children: [
-      {
-        path: '',
-        component: () => import('@/views/statistics/index'),
-        name: 'User',
-        meta: { title: '数据统计', icon: 'dashboard', affix: true }
-      }
-    ]
   },
   { path: '*', redirect: '/404', hidden: true }
 ]
