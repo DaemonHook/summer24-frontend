@@ -120,10 +120,14 @@ export const asyncRoutes = [
     path: '/statistics',
     component: Layout,
     redirect: '/statistics/index',
-    meta: {
-      title: '数据统计',
-      icon: 'user'
-    }
+    children: [
+      {
+        path: 'index',
+        component: () => import('@/views/statistics/index'),
+        name: 'statistics',
+        meta: { title: '数据统计', icon: 'chart', noCache: true }
+      }
+    ]
   },
   { path: '*', redirect: '/404', hidden: true }
 ]

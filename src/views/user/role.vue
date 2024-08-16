@@ -11,20 +11,13 @@
       </el-form-item>
     </el-form>
 
-    <!-- 操作按钮 -->
-    <div>
-      <el-button type="primary" icon="el-icon-plus" size="mini" @click="handleCreateRole">新增</el-button>
-      <el-button type="danger" icon="el-icon-delete" size="mini" @click="handleBatchDelete">删除</el-button>
-    </div>
-
-    <!-- 用户列表 -->
+    <!-- 角色列表 -->
     <el-table
       :data="tableData.list"
-      @selection-change="val => tableData.selection = val"
       @sort-change="handleSortChange"
     >
       <el-table-column type="index" width="60" />
-      <el-table-column type="selection" width="50" />
+      <el-table-column prop="name" label="角色名称" sortable="custom" />
       <el-table-column prop="description" label="用户描述" sortable="custom" />
       <el-table-column prop="createTime" label="创建时间" sortable="custom" />
       <el-table-column prop="updateTime" label="更新时间" sortable="custom" />
@@ -93,11 +86,11 @@ export default {
         searchContent: '',
         list: [{
           id: 1,
+          name: '达尔',
           description: '描述',
           createTime: '',
           updateTime: ''
         }],
-        selection: '',
         pageNum: 1,
         pageSize: 10,
         total: 1
@@ -116,6 +109,14 @@ export default {
     }
   },
   methods: {
+    // validateName(role, value, callback) {
+    //   if (!value) {
+    //     callback(new Error('请输入角色名称'))
+    //   } else {
+    //     if (this.roleEditForm.id && this.roleEditForm.value === value) {
+    //       callback()
+    //     }
+    // },
     // 新增角色
     handleCreateRole() {
       for (const key in this.roleEditForm) {
@@ -127,7 +128,28 @@ export default {
     openRoleEditDialog() {
       this.roleEditDialogVisible = true
       this.$nextTick(() => {
+        this.$ref.roleEditForm.clearValidate()
       })
+    },
+    // 删除角色
+    handleDelete() {
+      this.$confirm('此操作将永久删除角色，是否继续？', '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).then(() => {
+      }).catch(() => {
+        this.$message.info('已取消删除')
+      })
+    },
+    getRoleList() {
+      return this.tableData.list
+    },
+    resetQuery() {
+    },
+    handleSortChange() {
+    },
+    addOrUpdateRole() {
     }
   }
 }
