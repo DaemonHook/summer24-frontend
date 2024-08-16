@@ -80,18 +80,12 @@
 
     <!-- 用户编辑/创建窗口 -->
     <el-dialog class="user-edit-dialog" :title="userEditForm.id ? '用户编辑' : '新增用户'" :visible.sync="userEditDialogVisible" width="50%" top="8vh">
-      <!-- <el-form
-        ref="userEditForm"
-        status-icon
-        :model="userEditForm"
-        label-width="80px"
-        :rules="userEditForm.id ? userUpdateRules : userCreateRules"
-      > -->
       <el-form
         ref="userEditForm"
         status-icon
         :model="userEditForm"
         label-width="80px"
+        :rules="userEditForm.id ? userUpdateRules : userCreateRules"
       >
         <el-form-item label="用户名" prop="userName">
           <el-input v-model="userEditForm.userName" />
@@ -141,8 +135,8 @@
       </el-form>
       <span slot="footer" class="dialog-footer">
         <el-button @click="userEditDialogVisible = false">取 消</el-button>
-        <el-button type="primary">确 定</el-button>
-        <!-- <el-button type="primary" @click="addOrUpdateUser">确 定</el-button> -->
+        <!-- <el-button type="primary">确 定</el-button> -->
+        <el-button type="primary" @click="addOrUpdateUser">确 定</el-button>
       </span>
     </el-dialog>
   </div>
@@ -188,11 +182,53 @@ export default {
         phone: '',
         roleIds: []
       },
-      userEditDialogVisible: false,
-      allRoles: []
+      userCreateRules: {
+        userName: [{ required: true, trigger: 'blur', validator: this.userNameValidator }],
+        password: [{ required: true, trigger: 'change', validator: this.passwordValidator }],
+        roleIds: [{ required: true, trigger: 'change', validator: this.roleValidator }]
+      },
+      userUpdateRules: {
+        userName: [{ required: true, trigger: 'blur', validator: this.userNameValidator }],
+        password: [{ trigger: 'change', validator: this.passwordValidator }],
+        roleIds: [{ required: true, trigger: 'change', validator: this.roleValidator }]
+      },
+      currentEditRow: {}, // 当前编辑的行
+      allRoles: [],
+      userEditDialogVisible: false
     }
   },
   methods: {
+    // 用户名验证
+    userNameValidator(rule, value, callback) {
+      if (!value) {
+        callback(new Error('请输入用户名'))
+      } else if (this.userEditForm.id && value === this.currentEditRow.userName) {
+        callback()
+      } else {
+        // 使用接口判断是否重名
+        // checkUserName(value).then(res => {
+        //   callback(res.data.data ? new Error('用户名已存在') : undefined)
+        // })
+      }
+    },
+    // 密码验证
+    passwordValidator(rule, value, callback) {
+      if (!value && this.userEditForm.id) {
+        callback()
+      } else if (!value || value.length < 6) {
+        callback(new Error('密码长度不能小于6位'))
+      } else {
+        callback()
+      }
+    },
+    // 角色验证
+    roleValidator(rule, value, callback) {
+      if (!value || value.length === 0) {
+        callback(new Error('角色不能为空'))
+      } else {
+        callback()
+      }
+    },
     getUserList() {
     },
     handleCreateUser() {
@@ -225,6 +261,15 @@ export default {
     resetQuery() {
     },
     handleSortChange() {
+    },
+    // 添加或更新用户
+    addOrUpdateUser() {
+      this.$refs.userEditForm.validate(valid => {
+        if (valid) {
+          // 调用接口
+          console.log('添加或更新')
+        }
+      })
     }
   }
 }

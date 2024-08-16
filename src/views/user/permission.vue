@@ -52,6 +52,28 @@ export default {
   name: 'Permission',
   data() {
     return {
+      roleForm: {
+        searchName: '',
+        roleList: [],
+        currentRoleName: '',
+        currentRole: {},
+        loading: false
+      },
+      roleList: [],
+      permissionTree: [],
+      permissionIdList: [],
+      platformMap: {
+        1: '展示平台',
+        2: '管理平台'
+      }
+    }
+  },
+  mounted() {
+    this.getRoles()
+  },
+  methods: {
+    // 获取角色列表
+    getRoles() {
     }
   }
 }
