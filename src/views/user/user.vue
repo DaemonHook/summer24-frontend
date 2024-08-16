@@ -16,7 +16,7 @@
     <div>
       <el-button type="primary" icon="el-icon-plus" size="mini" @click="handleCreateUser">新增</el-button>
       <el-button type="danger" icon="el-icon-delete" size="mini" @click="handleBatchDelete">删除</el-button>
-      <el-button type="info" icon="el-icon-upload2" size="mini" @click="handleImportUser">导入</el-button>
+      <!-- <el-button type="info" icon="el-icon-upload2" size="mini" @click="handleImportUser">导入</el-button> -->
     </div>
 
     <!-- 用户列表 -->
@@ -196,9 +196,10 @@ export default {
       this.userEditDialogVisible = true
     },
     handleBatchDelete() {
+      // 将tableData.selection中的id提取出来传给handleDelete
     },
-    handleImportUser() {
-    },
+    // handleImportUser() {
+    // },
     // 切换用户账号激活状态
     handleSwitch() {
     },
@@ -209,7 +210,14 @@ export default {
       }
       this.userEditDialogVisible = true
     },
-    handleDelete(row) {
+    handleDelete(userIds) {
+      this.$confirm('此操作将永久删除用户，是否继续？', '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).then(() => {
+        // 对接删除用户接口
+      })
     },
     resetQuery() {
     },
