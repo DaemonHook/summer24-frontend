@@ -12,6 +12,6 @@ export default {
     return {
       currentRole: 'adminDashboard'
     }
-  },
+  }
 }
 </script>

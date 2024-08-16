@@ -1,5 +1,5 @@
 module.exports = {
-  title: 'Vue Element Admin',
+  title: 'summer24-frontend',
 
   /**
    * @type {boolean} true | false

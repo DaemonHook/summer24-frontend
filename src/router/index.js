@@ -113,7 +113,7 @@ export const asyncRoutes = [
         component: () => import('@/views/user/permission'),
         name: 'Permission',
         meta: { title: '权限' }
-      },
+      }
     ]
   },
   {
@@ -123,7 +123,7 @@ export const asyncRoutes = [
     meta: {
       title: '数据统计',
       icon: 'user'
-    },
+    }
   },
   { path: '*', redirect: '/404', hidden: true }
 ]
