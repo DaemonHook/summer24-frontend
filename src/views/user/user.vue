@@ -2,7 +2,7 @@
   <div class="dashboard-container">
     <!-- 搜索表单 -->
     <el-form :model="tableData" label-width="80px" :inline="true" size="small">
-      <el-form-item label="活动名称">
+      <el-form-item label="用户名称">
         <el-input v-model="tableData.name" placeholder="请输入用户名称" />
       </el-form-item>
       <el-form-item label="创建时间">
@@ -143,6 +143,8 @@
 </template>
 
 <script>
+import * as UserApi from '@/api/user'
+
 export default {
   name: 'User',
   data() {
@@ -197,6 +199,9 @@ export default {
       userEditDialogVisible: false
     }
   },
+  mounted() {
+    this.getUserList()
+  },
   methods: {
     // 用户名验证
     userNameValidator(rule, value, callback) {
@@ -230,6 +235,16 @@ export default {
       }
     },
     getUserList() {
+      UserApi.getUsers(this.tableData).then(res => {
+        this.tableData.list = res.data.data.content
+        this.tableData.total = res.data.data.totalElements
+        // 更新头像
+        // this.$nextTick(() => {
+        //   this.tableData.list.forEach(row => {
+        //     this.getAvatar(row.id, row)
+        //   })
+        // })
+      })
     },
     handleCreateUser() {
       this.userEditDialogVisible = true

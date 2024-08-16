@@ -19,6 +19,7 @@ import './permission' // permission control
 import './utils/error-log' // error log
 
 import * as filters from './filters' // global filters
+import axios from './utils/request'
 
 /**
  * If you don't want to use mock-server
@@ -45,6 +46,7 @@ Object.keys(filters).forEach(key => {
 
 Vue.config.productionTip = false
 
+Vue.prototype.$http = axios
 new Vue({
   el: '#app',
   router,
