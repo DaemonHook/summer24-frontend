@@ -1,5 +1,6 @@
 <template>
   <div class="dashboard-container">
+    <!-- 搜索表单 -->
     <el-form :model="tableData" label-width="80px" :inline="true" size="small">
       <el-form-item label="活动名称">
         <el-input v-model="tableData.name" placeholder="请输入用户名称" />
@@ -13,6 +14,8 @@
         <el-button icon="el-icon-refresh" size="mini" @click="resetQuery">重置</el-button>
       </el-form-item>
     </el-form>
+
+    <!-- 操作按钮 -->
     <div>
       <el-button type="primary" icon="el-icon-plus" size="mini" @click="handleCreateUser">新增</el-button>
       <el-button type="danger" icon="el-icon-delete" size="mini" @click="handleBatchDelete">删除</el-button>
