@@ -1,13 +1,31 @@
 <template>
-  <div class="dashboard-container">
-    <!-- 搜索表单 -->
-    <el-form :model="tableData" label-width="80px" :inline="true" size="small">
+  <div class="app-container">
+
+    <!-- 用户搜索表单 -->
+    <el-form :model="tableData" size="small" :inline="true" label-width="68px">
       <el-form-item label="用户名称">
-        <el-input v-model="tableData.name" placeholder="请输入用户名称" />
+        <el-input
+          v-model="tableData.userName"
+          placeholder="请输入用户名称"
+          clearable
+          @keyup.enter.native="getUserList"
+        />
       </el-form-item>
       <el-form-item label="创建时间">
-        <el-date-picker v-model="tableData.minCreateTime" type="datetime" placeholder="起始时间" class="date-picker" />
-        <el-date-picker v-model="tableData.maxCreateTime" type="datetime" placeholder="截止时间" class="date-picker" />
+        <el-date-picker
+          v-model="tableData.minCreateTime"
+          class="date-picker"
+          value-format="yyyy-MM-dd HH:mm:ss"
+          type="datetime"
+          placeholder="起始日期"
+        />
+        <el-date-picker
+          v-model="tableData.maxCreateTime"
+          class="date-picker"
+          value-format="yyyy-MM-dd HH:mm:ss"
+          type="datetime"
+          placeholder="截止日期"
+        />
       </el-form-item>
       <el-form-item>
         <el-button type="primary" icon="el-icon-search" size="mini" @click="getUserList">搜索</el-button>
@@ -15,11 +33,11 @@
       </el-form-item>
     </el-form>
 
-    <!-- 操作按钮 -->
+    <!-- 用户操作按钮 -->
     <div>
-      <el-button type="primary" icon="el-icon-plus" size="mini" @click="handleCreateUser">新增</el-button>
-      <el-button type="danger" icon="el-icon-delete" size="mini" @click="handleBatchDelete">删除</el-button>
-      <!-- <el-button type="info" icon="el-icon-upload2" size="mini" @click="handleImportUser">导入</el-button> -->
+      <el-button type="primary" plain icon="el-icon-plus" size="mini" @click="handleCreateUser"> 新增 </el-button>
+      <el-button type="danger" plain icon="el-icon-delete" size="mini" @click="handleBatchDelete"> 删除</el-button>
+      <el-button type="info" plain icon="el-icon-upload2" size="mini" @click="handleImportUser"> 导入 </el-button>
     </div>
 
     <!-- 用户列表 -->
@@ -43,25 +61,15 @@
       <el-table-column prop="createTime" label="创建时间" sortable="custom" />
       <el-table-column prop="status" label="是否激活" sortable="custom" width="100">
         <template slot-scope="scope">
-          <el-switch
-            v-model="scope.row.status"
-            :active-value="1"
-            :inactive-value="0"
-            @change="handleSwitch(scope.row)"
-          />
+          <el-switch v-model="scope.row.status" :active-value="1" :inactive-value="0" @change="handleSwitch(scope.row)" />
         </template>
       </el-table-column>
       <el-table-column label="操作">
         <template slot-scope="scope">
           <el-button type="text" size="small" icon="el-icon-edit" @click="handleEdit(scope.row)">
             编辑 </el-button>
-          <el-button
-            type="text"
-            size="small"
-            icon="el-icon-delete"
-            style="color: red;"
-            @click="handleDelete([scope.row.id])"
-          >删除</el-button>
+          <el-button type="text" size="small" icon="el-icon-delete" style="color: red;" @click="handleDelete([scope.row.id])">
+            删除</el-button>
         </template>
       </el-table-column>
     </el-table>
@@ -119,7 +127,7 @@
             <el-option v-for="role in allRoles" :key="role.id" :label="role.name" :value="role.id" />
           </el-select>
         </el-form-item>
-        <!-- <el-form-item label="头像">
+        <el-form-item label="头像">
           <el-upload
             class="avatar-uploader"
             action=""
@@ -131,46 +139,48 @@
             <i v-else class="el-icon-plus avatar-uploader-icon" />
           </el-upload>
           <el-button v-if="avatarUploadData.raw" size="mini" @click="resetUploadData(false)">重置</el-button>
-        </el-form-item> -->
-      </el-form>
+        </el-form-item></el-form>
       <span slot="footer" class="dialog-footer">
         <el-button @click="userEditDialogVisible = false">取 消</el-button>
-        <!-- <el-button type="primary">确 定</el-button> -->
         <el-button type="primary" @click="addOrUpdateUser">确 定</el-button>
       </span>
     </el-dialog>
+
+    <!-- 用户导入弹窗 -->
+    <user-import-dialog ref="userImportDialog" @import-success="getUserList" />
+
   </div>
 </template>
 
 <script>
+import md5 from 'js-md5'
 import * as UserApi from '@/api/user'
+import { getRoles } from '@/api/role'
+import { checkUserName } from '@/api/auth'
+import emptyAvatar from '@/assets/images/empty_avatar.jpg'
+import LoadingUtils from '@/utils/loading-utils'
+import UserImportDialog from './components/UserImportDialog.vue'
+
+const copyObject = obj => JSON.parse(JSON.stringify(obj))
 
 export default {
   name: 'User',
+  components: {
+    UserImportDialog
+  },
   data() {
     return {
       tableData: {
-        name: '',
-        minCreateTime: '',
-        maxCreateTime: '',
-        list: [{
-          id: 1,
-          userName: '张三',
-          trueName: '张瑞环',
-          roleList: [],
-          status: true
-        },
-        {
-          id: 2,
-          userName: '李四',
-          trueName: '李世俊',
-          roleList: [],
-          status: true
-        }],
-        selection: '',
+        list: [],
+        total: 0,
         pageNum: 1,
         pageSize: 10,
-        total: 1
+        userName: '',
+        minCreateTime: '',
+        maxCreateTime: '',
+        orderBy: '',
+        orderMethod: 'asc',
+        selection: []
       },
       userEditForm: {
         id: '',
@@ -194,29 +204,32 @@ export default {
         password: [{ trigger: 'change', validator: this.passwordValidator }],
         roleIds: [{ required: true, trigger: 'change', validator: this.roleValidator }]
       },
-      currentEditRow: {}, // 当前编辑的行
+      currentEditRow: {},
       allRoles: [],
-      userEditDialogVisible: false
+      userEditDialogVisible: false,
+      avatarMap: {}, // 缓存头像, userId -> blobUrl
+      avatarUploadData: {
+        raw: null,
+        url: ''
+      }
     }
   },
   mounted() {
+    this.getAllRoles()
     this.getUserList()
   },
   methods: {
-    // 用户名验证
     userNameValidator(rule, value, callback) {
       if (!value) {
         callback(new Error('请输入用户名'))
       } else if (this.userEditForm.id && value === this.currentEditRow.userName) {
         callback()
       } else {
-        // 使用接口判断是否重名
-        // checkUserName(value).then(res => {
-        //   callback(res.data.data ? new Error('用户名已存在') : undefined)
-        // })
+        checkUserName(value).then(res => {
+          callback(res.data.data ? new Error('用户名已存在') : undefined)
+        })
       }
     },
-    // 密码验证
     passwordValidator(rule, value, callback) {
       if (!value && this.userEditForm.id) {
         callback()
@@ -226,7 +239,6 @@ export default {
         callback()
       }
     },
-    // 角色验证
     roleValidator(rule, value, callback) {
       if (!value || value.length === 0) {
         callback(new Error('角色不能为空'))
@@ -234,65 +246,259 @@ export default {
         callback()
       }
     },
+
+    /**
+     * 获取所有角色
+     */
+    getAllRoles() {
+      getRoles().then(res => {
+        this.allRoles = res.data.data
+        this.$refs.userImportDialog.setRoles(this.allRoles)
+      })
+    },
+
+    /**
+     * 获取用户列表
+     */
     getUserList() {
       UserApi.getUsers(this.tableData).then(res => {
         this.tableData.list = res.data.data.content
         this.tableData.total = res.data.data.totalElements
-        // 更新头像
-        // this.$nextTick(() => {
-        //   this.tableData.list.forEach(row => {
-        //     this.getAvatar(row.id, row)
-        //   })
-        // })
+        this.$nextTick(() => {
+          this.tableData.list.forEach(row => {
+            this.getAvatar(row.id, row)
+          })
+        })
       })
     },
-    handleCreateUser() {
-      this.userEditDialogVisible = true
+
+    /**
+     * 获取用户头像
+     * @param {number} userId 用户ID
+     * @param {object} row 行数据
+     */
+    getAvatar(userId, row) {
+      const avatarObj = document.getElementById('avatar-' + userId)
+      if (this.avatarMap[userId]) {
+        row.avatar = this.avatarMap[userId]
+        avatarObj.src = this.avatarMap[userId]
+      } else {
+        UserApi.getUserAvatar(userId).then(blobUrl => {
+          this.avatarMap[userId] = blobUrl
+          row.avatar = blobUrl
+        }).catch(() => {
+          this.avatarMap[userId] = emptyAvatar
+          row.avatar = emptyAvatar
+        }).finally(() => {
+          avatarObj.src = row.avatar
+        })
+      }
     },
-    handleBatchDelete() {
-      // 将tableData.selection中的id提取出来传给handleDelete
+
+    /**
+     * 更新用户头像
+     */
+    updateAvatar() {
+      if (!this.avatarUploadData.raw) {
+        return
+      }
+      this.avatarMap[this.userEditForm.id] = this.avatarUploadData.url
+      UserApi.updateUserAvatar(this.userEditForm.id, this.avatarUploadData.raw).catch(() => {
+        this.avatarMap[this.userEditForm.id] = emptyAvatar
+      }).finally(() => {
+        this.resetUploadData()
+      })
     },
-    // handleImportUser() {
-    // },
-    // 切换用户账号激活状态
-    handleSwitch() {
+
+    /**
+     * 重置查询条件
+     */
+    resetQuery() {
+      this.tableData.userName = ''
+      this.tableData.minCreateTime = ''
+      this.tableData.maxCreateTime = ''
     },
-    // 编辑用户信息
+
+    /**
+     * 编辑用户
+     * @param {object} row 行数据
+     */
     handleEdit(row) {
+      this.currentEditRow = row
       for (const key in this.userEditForm) {
         this.userEditForm[key] = row[key]
       }
-      this.userEditDialogVisible = true
+      this.userEditForm.roleIds = row.roleList ? row.roleList.map(item => {
+        const role = this.allRoles.find(role => role.name === item)
+        return role && role.id
+      }) : []
+      this.userEditForm.roleIds.filter(id => id)
+      this.openUserEditForm()
+      this.resetUploadData()
+      if (row.avatar && row.avatar !== emptyAvatar) {
+        this.avatarUploadData.url = row.avatar
+      }
     },
+
+    /**
+     * 重置用户编辑表单
+     */
+    resetUserEditForm() {
+      for (const key in this.userEditForm) {
+        this.userEditForm[key] = ''
+      }
+      this.userEditForm.roleIds = []
+    },
+
+    /**
+     * 删除用户
+     * @param {array} userIds 用户ID数组
+     */
     handleDelete(userIds) {
-      this.$confirm('此操作将永久删除用户，是否继续？', '提示', {
+      this.$confirm('此操作将永久删除该用户, 是否继续?', '提示', {
         confirmButtonText: '确定',
         cancelButtonText: '取消',
         type: 'warning'
       }).then(() => {
-        // 对接删除用户接口
+        LoadingUtils.createFullScreenLoading('正在删除...')
+        UserApi.deleteUsers(userIds).then(() => {
+          this.$message.success('删除成功')
+          this.getUserList()
+        }).finally(() => {
+          LoadingUtils.closeFullScreenLoading()
+        })
       })
     },
-    resetQuery() {
+
+    /**
+     * 切换用户状态
+     * @param {object} row 行数据
+     */
+    handleSwitch(row) {
+      UserApi.changeUserStatus(row.id, row.status).then(() => {
+        this.$message.success('操作成功')
+      })
     },
-    handleSortChange() {
-    },
-    // 添加或更新用户
+
+    /**
+     * 添加或更新用户
+     */
     addOrUpdateUser() {
       this.$refs.userEditForm.validate(valid => {
         if (valid) {
-          // 调用接口
-          console.log('添加或更新')
+          const params = copyObject(this.userEditForm)
+          if (!params.password) {
+            delete params.password
+          } else {
+            params.password = md5(params.password)
+          }
+          LoadingUtils.createFullScreenLoading('正在保存...')
+          const tempApi = this.userEditForm.id ? UserApi.updateUser : UserApi.addUser
+          tempApi(params).then(res => {
+            this.$message.success('操作成功')
+            if (!this.userEditForm.id) {
+              this.userEditForm.id = res.data.data.id
+            }
+            this.updateAvatar()
+            this.getUserList()
+          }).finally(() => {
+            this.userEditDialogVisible = false
+            LoadingUtils.closeFullScreenLoading()
+          })
         }
       })
+    },
+
+    /**
+     * 创建用户
+     */
+    handleCreateUser() {
+      this.resetUserEditForm()
+      this.resetUploadData()
+      this.openUserEditForm()
+    },
+
+    /**
+     * 批量删除用户
+     */
+    handleBatchDelete() {
+      if (this.tableData.selection.length === 0) {
+        this.$message.warning('请选择要删除的用户')
+        return
+      }
+      const userIds = this.tableData.selection.map(item => item.id)
+      this.handleDelete(userIds)
+    },
+
+    /**
+     * 处理排序变化
+     * @param {object} column 列对象
+     * @param {string} prop 列属性
+     * @param {string} order 排序方式
+     */
+    handleSortChange({ column, prop, order }) {
+      this.tableData.orderBy = prop
+      this.tableData.orderMethod = order === 'ascending' ? 'asc' : 'desc'
+      this.getUserList()
+    },
+
+    /**
+     * 处理头像变化
+     * @param {object} file 文件对象
+     */
+    handleAvatarChange(file) {
+      this.avatarUploadData.raw = file.raw
+      this.avatarUploadData.url = URL.createObjectURL(file.raw)
+    },
+
+    /**
+     * 重置上传数据
+     * @param {boolean} clear 是否清空数据
+     */
+    resetUploadData(clear = true) {
+      this.avatarUploadData.raw = null
+      this.avatarUploadData.url = clear ? '' : this.avatarMap[this.userEditForm.id] || ''
+    },
+
+    /**
+     * 打开用户编辑窗口
+     */
+    openUserEditForm() {
+      this.userEditDialogVisible = true
+      this.$nextTick(() => {
+        this.$refs.userEditForm.clearValidate()
+      })
+    },
+
+    /**
+     * 打开用户导入窗口
+     */
+    handleImportUser() {
+      this.$refs.userImportDialog.show(true)
     }
   }
 }
 </script>
 
 <style scoped>
+.pagination {
+  text-align: center;
+}
 .date-picker {
-  margin-right: 10px;
   width: 160px;
+  margin-right: 10px;
+}
+.table-avatar {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+}
+.avatar-uploader {
+  display: inline-block;
+  margin-right: 10px;
+  vertical-align: middle;
+}
+.avatar-uploader img {
+  max-height: 100px;
 }
 </style>

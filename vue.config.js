@@ -15,15 +15,10 @@ const name = defaultSettings.title || 'vue Element Admin' // page title
 // port = 9527 npm run dev OR npm run dev --port = 9527
 const port = process.env.port || process.env.npm_config_port || 9527 // dev port
 
-const gatewayUrl = 'http://localhost:8002/api'
 const devUrlMap = {
-  'user-api': 'http://localhost:8090/v1'
+  'user-api': 'http://localhost:8080'
 }
-const prodUrlMap = {
-  'user-api': gatewayUrl + '/user/v1'
-}
-const devMode = process.env.NODE_ENV !== 'production'
-const urlMap = devMode ? devUrlMap : prodUrlMap
+const urlMap = devUrlMap
 const proxyTable = {}
 for (const key in urlMap) {
   proxyTable['/' + key] = {
