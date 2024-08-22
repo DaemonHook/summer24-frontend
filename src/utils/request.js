@@ -10,6 +10,7 @@ const service = axios.create({
 // axios拦截器, 默认增加请求头token
 service.interceptors.request.use(
   config => {
+    console.log('即将请求的 URL:', config.url)
     const token = getToken()
     if (token) {
       config.headers.Authorization = token

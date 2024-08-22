@@ -1,4 +1,4 @@
-import { getInfo, getAvatar } from '@/api/user'
+import { getInfo } from '@/api/user'
 import { login, logout } from '@/api/auth'
 import { getToken, setToken, removeToken } from '@/utils/auth'
 import router, { resetRouter } from '@/router'
@@ -6,7 +6,6 @@ import router, { resetRouter } from '@/router'
 const state = {
   token: getToken(),
   name: '',
-  avatar: '',
   introduction: '',
   roles: []
 }
@@ -20,9 +19,6 @@ const mutations = {
   },
   SET_NAME: (state, name) => {
     state.name = name
-  },
-  SET_AVATAR: (state, avatar) => {
-    state.avatar = avatar
   },
   SET_ROLES: (state, roles) => {
     state.roles = roles
@@ -64,7 +60,6 @@ const actions = {
         commit('SET_ROLES', roles)
         commit('SET_NAME', userName)
         commit('SET_INTRODUCTION', introduction)
-        getAvatar().then(url => { commit('SET_AVATAR', url) })
         resolve({ ...data, roles })
       }).catch(error => {
         reject(error)
@@ -119,18 +114,6 @@ const actions = {
 
     // reset visited views and cached views
     dispatch('tagsView/delAllViews', null, { root: true })
-  },
-
-  // get user avatar
-  getAvatar({ commit }) {
-    return new Promise((resolve, reject) => {
-      getAvatar().then(url => {
-        commit('SET_AVATAR', url)
-        resolve(url)
-      }).catch(error => {
-        reject(error)
-      })
-    })
   }
 }
 

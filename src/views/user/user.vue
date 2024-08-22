@@ -48,13 +48,6 @@
     >
       <el-table-column type="index" width="60" />
       <el-table-column type="selection" width="50" />
-      <el-table-column width="50">
-        <template slot-scope="scope">
-          <!-- <img class="table-avatar" :src="scope.row.avatar" /> -->
-          <!-- 直接使用:src绑定会导致刷新失败 -->
-          <img :id="'avatar-' + scope.row.id" class="table-avatar">
-        </template>
-      </el-table-column>
       <el-table-column prop="userName" label="用户名" sortable="custom" />
       <el-table-column prop="trueName" label="真实姓名" sortable="custom" />
       <el-table-column prop="roleList" label="角色" sortable="custom" />
@@ -127,19 +120,7 @@
             <el-option v-for="role in allRoles" :key="role.id" :label="role.name" :value="role.id" />
           </el-select>
         </el-form-item>
-        <el-form-item label="头像">
-          <el-upload
-            class="avatar-uploader"
-            action=""
-            :auto-upload="false"
-            :show-file-list="false"
-            :on-change="file => handleAvatarChange(file)"
-          >
-            <img v-if="avatarUploadData.url" :src="avatarUploadData.url" class="avatar">
-            <i v-else class="el-icon-plus avatar-uploader-icon" />
-          </el-upload>
-          <el-button v-if="avatarUploadData.raw" size="mini" @click="resetUploadData(false)">重置</el-button>
-        </el-form-item></el-form>
+      </el-form>
       <span slot="footer" class="dialog-footer">
         <el-button @click="userEditDialogVisible = false">取 消</el-button>
         <el-button type="primary" @click="addOrUpdateUser">确 定</el-button>
@@ -153,11 +134,10 @@
 </template>
 
 <script>
-import md5 from 'js-md5'
+// import md5 from 'js-md5'
 import * as UserApi from '@/api/user'
 import { getRoles } from '@/api/role'
 import { checkUserName } from '@/api/auth'
-import emptyAvatar from '@/assets/images/empty_avatar.jpg'
 import LoadingUtils from '@/utils/loading-utils'
 import UserImportDialog from './components/UserImportDialog.vue'
 
@@ -206,12 +186,7 @@ export default {
       },
       currentEditRow: {},
       allRoles: [],
-      userEditDialogVisible: false,
-      avatarMap: {}, // 缓存头像, userId -> blobUrl
-      avatarUploadData: {
-        raw: null,
-        url: ''
-      }
+      userEditDialogVisible: false
     }
   },
   mounted() {
@@ -264,49 +239,6 @@ export default {
       UserApi.getUsers(this.tableData).then(res => {
         this.tableData.list = res.data.data.content
         this.tableData.total = res.data.data.totalElements
-        this.$nextTick(() => {
-          this.tableData.list.forEach(row => {
-            this.getAvatar(row.id, row)
-          })
-        })
-      })
-    },
-
-    /**
-     * 获取用户头像
-     * @param {number} userId 用户ID
-     * @param {object} row 行数据
-     */
-    getAvatar(userId, row) {
-      const avatarObj = document.getElementById('avatar-' + userId)
-      if (this.avatarMap[userId]) {
-        row.avatar = this.avatarMap[userId]
-        avatarObj.src = this.avatarMap[userId]
-      } else {
-        UserApi.getUserAvatar(userId).then(blobUrl => {
-          this.avatarMap[userId] = blobUrl
-          row.avatar = blobUrl
-        }).catch(() => {
-          this.avatarMap[userId] = emptyAvatar
-          row.avatar = emptyAvatar
-        }).finally(() => {
-          avatarObj.src = row.avatar
-        })
-      }
-    },
-
-    /**
-     * 更新用户头像
-     */
-    updateAvatar() {
-      if (!this.avatarUploadData.raw) {
-        return
-      }
-      this.avatarMap[this.userEditForm.id] = this.avatarUploadData.url
-      UserApi.updateUserAvatar(this.userEditForm.id, this.avatarUploadData.raw).catch(() => {
-        this.avatarMap[this.userEditForm.id] = emptyAvatar
-      }).finally(() => {
-        this.resetUploadData()
       })
     },
 
@@ -335,9 +267,6 @@ export default {
       this.userEditForm.roleIds.filter(id => id)
       this.openUserEditForm()
       this.resetUploadData()
-      if (row.avatar && row.avatar !== emptyAvatar) {
-        this.avatarUploadData.url = row.avatar
-      }
     },
 
     /**
@@ -348,6 +277,15 @@ export default {
         this.userEditForm[key] = ''
       }
       this.userEditForm.roleIds = []
+    },
+
+    /**
+     * 重置上传数据
+     * @param {boolean} clear 是否清空数据
+     */
+    resetUploadData(clear = true) {
+      // this.avatarUploadData.raw = null
+      // this.avatarUploadData.url = clear ? '' : this.avatarMap[this.userEditForm.id] || ''
     },
 
     /**
@@ -389,8 +327,6 @@ export default {
           const params = copyObject(this.userEditForm)
           if (!params.password) {
             delete params.password
-          } else {
-            params.password = md5(params.password)
           }
           LoadingUtils.createFullScreenLoading('正在保存...')
           const tempApi = this.userEditForm.id ? UserApi.updateUser : UserApi.addUser
@@ -399,7 +335,6 @@ export default {
             if (!this.userEditForm.id) {
               this.userEditForm.id = res.data.data.id
             }
-            this.updateAvatar()
             this.getUserList()
           }).finally(() => {
             this.userEditDialogVisible = false
@@ -443,24 +378,6 @@ export default {
     },
 
     /**
-     * 处理头像变化
-     * @param {object} file 文件对象
-     */
-    handleAvatarChange(file) {
-      this.avatarUploadData.raw = file.raw
-      this.avatarUploadData.url = URL.createObjectURL(file.raw)
-    },
-
-    /**
-     * 重置上传数据
-     * @param {boolean} clear 是否清空数据
-     */
-    resetUploadData(clear = true) {
-      this.avatarUploadData.raw = null
-      this.avatarUploadData.url = clear ? '' : this.avatarMap[this.userEditForm.id] || ''
-    },
-
-    /**
      * 打开用户编辑窗口
      */
     openUserEditForm() {
@@ -478,6 +395,7 @@ export default {
     }
   }
 }
+
 </script>
 
 <style scoped>
